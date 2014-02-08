@@ -1,7 +1,7 @@
 module Dominion (
                 -- | How to use: https:\/\/github.com\/egonschiele\/dominion
-                module Dominion, 
-                Option(..), 
+                module Dominion,
+                Option(..),
                 has, handValue, pileEmpty, getPlayer, cardsOf, validateBuy, validatePlay, getRound, countNum) where
 
 import           Prelude                hiding (log)
@@ -95,7 +95,7 @@ playsByPreference playerId cards = do
     unless (null playableCards) $ do
       playerId `plays` head playableCards
       playerId `playsByPreference` cards
- 
+
 -- | In the simplest case, this lets you play a card, like this:
 --
 -- > playerId `plays` smithy
@@ -103,7 +103,7 @@ playsByPreference playerId cards = do
 -- You can just use this function blindly, without checking to see if you
 -- have enough actions, or whether you have a smithy in your hand.
 -- `plays` will perform those  validations for you. It returns a `PlayResult`,
--- which is an `Either` with an error message or a return value.  
+-- which is an `Either` with an error message or a return value.
 --
 -- Some cards require an additional action. For example, if you use
 -- a workshop, you need to specify what card you're going to get. In that
