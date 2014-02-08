@@ -223,6 +223,32 @@ _with :: T.Followup -> T.FollowupAction -> T.Dominion (T.PlayResult (Maybe [T.Fo
     modifyPlayer playerId $ \p -> set T.deck [] $ over T.discard (++ (p ^. T.deck)) p
   return $ Right Nothing
 
+(playerId, T.LibraryEffect) `_with` (T.Library decision) = do
+  asideCards <- runLibrary []
+  modifyPlayer playerId $ over T.discard (asideCards ++)
+  return $ Right Nothing
+  where
+    shouldKeep hand asideCards card =
+      not (isAction card) || case (decision hand asideCards card) of
+                               T.Keep -> True
+                               T.SetAside -> False
+    runLibrary setAsideCards = do
+      hand <- currentHand playerId
+      if length hand >= 7 -- done drawing
+        then return setAsideCards
+        else do
+          cards <- revealFromDeck playerId 1
+          case cards of
+           [] -> return setAsideCards -- no cards left to draw
+           [card] -> if (shouldKeep hand setAsideCards card)
+                       then do
+                         modifyPlayer playerId $ over T.hand (card:)
+                         runLibrary setAsideCards
+                       else
+                         runLibrary (card:setAsideCards)
+           otherwise -> error "Revealed too many cards at once"
+
+
 (playerId, T.TrashCards x) `_with` (T.Chapel cards) = do
   let toTrash = take x cards
   forM_ toTrash $ \card_ -> playerId `trashesCard` card_

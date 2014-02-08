@@ -71,6 +71,14 @@ makeLenses ''Card
 -- | Used with the `thief` card.
 data ThiefTrashAction = TrashOnly Card | GainTrashedCard Card
 
+-- | Used with the `library` card
+data LibraryAction = SetAside | Keep
+
+-- | The followup for playing Library receives a list of cards in hand,
+-- a list of cards already set aside, and a new card to consider
+-- setting aside. 
+type LibraryDecision = [Card] -> [Card] -> Card -> LibraryAction
+
 -- | Some cards have a followup action associated with them. For example,
 -- when you play a `workshop`, you need to choose what card you're going to
 -- get. To use the followup action, you need to use the relevant data
@@ -86,6 +94,7 @@ data FollowupAction = ThroneRoom Card
                     | Chapel [Card]
                     -- | Takes the card you want to gain.
                     | Feast Card
+                    | Library LibraryDecision
                     -- | Takes the card you want to trash.
                     | Mine Card
                     -- | The first card is the card you are trashing, the

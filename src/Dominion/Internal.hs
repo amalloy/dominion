@@ -433,16 +433,9 @@ playerId `usesEffect` effect@(T.GainCardUpto x) = do
     log playerId ("Gain a card costing up to " ++ show x ++ " coins.")
     return $ Just (playerId, effect)
 
--- TODO this doesn't set aside any action cards.
--- How do I implement the logic for choosing that?
--- Basically it allows the player to go through
--- and choose the action card they want?
 playerId `usesEffect` effect@T.LibraryEffect = do
     log playerId "Drawing to 7 cards..."
-    drawsUntil playerId $ \_ -> do
-                 player <- getPlayer playerId
-                 return $ length (player ^. T.hand) == 7
-    return Nothing
+    return $ Just (playerId, effect)
 
 -- NOTE: one side effect of this + council room is:
 -- every player needs to draw their next hand immediately
