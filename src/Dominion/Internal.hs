@@ -108,9 +108,10 @@ gameOver cards
     | otherwise = False
 
 -- | Given a player id and a number of cards to draw, draws that many cards
--- from the deck, shuffling if necessary.
-drawFromDeck :: T.PlayerId -> Int -> T.Dominion [T.Card]
-drawFromDeck playerId numCards = do
+-- from the deck and reveals them, shuffling if necessary. Does not add cards
+-- to any player's hand.
+revealFromDeck :: T.PlayerId -> Int -> T.Dominion [T.Card]
+revealFromDeck playerId numCards = do
     player <- getPlayer playerId
     let deck = player ^. T.deck
     if length deck >= numCards
@@ -124,8 +125,16 @@ drawFromDeck playerId numCards = do
    draw numCards = do
        player <- getPlayer playerId
        let drawnCards = take numCards (player ^. T.deck)
-       modifyPlayer playerId $ over T.deck (drop numCards) . over T.hand (++ drawnCards)
+       modifyPlayer playerId $ over T.deck (drop numCards)
        return drawnCards
+
+-- | Given a player id and a number of cards to draw, draws that many cards
+-- from the deck, shuffling if necessary.       
+drawFromDeck :: T.PlayerId -> Int -> T.Dominion [T.Card]
+drawFromDeck playerId numCards = do
+  drawnCards <- revealFromDeck playerId numCards
+  modifyPlayer playerId $ over T.hand (++ drawnCards)
+  return drawnCards
 
 -- | Like `modify` for the `State` monad, but works on players.
 -- Takes a player id and a function that modifies the player.
