@@ -6,6 +6,7 @@ import qualified Dominion.Cards      as CA
 import           Dominion.Internal
 import qualified Dominion.Types      as T
 import           Prelude             hiding (log)
+import           Data.List           (sort)
 import           Test.Hspec
 
 -- | Use this to run a strategy once and inspect the gamestate.
@@ -69,7 +70,22 @@ main = do
       describe "Feast" $ do
         it "should only trash itself once" $ do
           io True $ do
-            withHand (CA.throneRoom : replicate 3 CA.feast) $ \playerId -> do
+            withHand (CA.throneRoom : replicate 3 CA.feast) [] $ \playerId -> do
               playerId `plays` CA.throneRoom `with` (T.ThroneRoom CA.feast) `withMulti` (replicate 2 $ T.Feast CA.duchy)
               player <- getPlayer playerId
               return $ player ^. T.hand == replicate 2 CA.feast && player ^. T.discard == replicate 3 CA.duchy
+
+      describe "Library" $ do
+        it "should let you skip action cards" $ do
+          io True $ do
+            withHand [CA.village, CA.library] [] $ \playerId -> do
+              modifyPlayer playerId $ set T.deck [CA.copper, CA.mine, CA.mine, CA.copper, CA.copper] . set T.discard [CA.chapel]
+              let libChoice hand aside card =
+                            if (card == CA.chapel) || (length (filter isAction hand) < 1)
+                              then T.Keep
+                              else T.SetAside
+              playerId `plays` CA.village
+              playerId `plays` CA.library `with` (T.Library libChoice)
+              let expected = CA.chapel : CA.mine : (replicate 3 CA.copper)
+              hand <- currentHand playerId
+              return $ (sort hand) == (sort expected)
